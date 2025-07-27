@@ -38,7 +38,7 @@ Based on the Miro diagram, the banking BPO workflow consists of the following ke
 ## Application Structure Design
 
 ### Streamlit Pages Structure:
-1. **Main Dashboard** (`main.py`) - Overview and navigation
+1. **Main Dashboard** (`Home.py`) - Overview and navigation
 2. **Document Processing** (`pages/1_Document_Processing.py`) - OCR and PDF processing
 3. **Customer Verification** (`pages/2_Customer_Verification.py`) - Customer lookup and verification
 4. **Account Management** (`pages/3_Account_Management.py`) - Account operations

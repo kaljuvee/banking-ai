@@ -77,14 +77,14 @@ The application follows a multi-page Streamlit architecture with the following c
 
 5. **Run the application**:
    ```bash
-   streamlit run main.py
+   streamlit run Home.py
    ```
 
 ## 📁 Project Structure
 
 ```
 banking-ai/
-├── main.py                     # Main Streamlit application
+├── Home.py                     # Main Streamlit application
 ├── pages/                      # Streamlit pages
 │   ├── 1_Document_Processing.py
 │   ├── 2_Customer_Verification.py
@@ -149,7 +149,7 @@ The application includes sample data for testing:
 ## 🧪 Testing
 
 ### Local Testing:
-1. Start the application: `streamlit run main.py`
+1. Start the application: `streamlit run Home.py`
 2. Navigate through each page to test functionality
 3. Upload sample documents to test AI processing
 4. Verify data persistence across sessions
@@ -169,7 +169,7 @@ The application includes sample data for testing:
 
 ### Local Production:
 ```bash
-streamlit run main.py --server.port 8501 --server.address 0.0.0.0
+streamlit run Home.py --server.port 8501 --server.address 0.0.0.0
 ```
 
 ## 🔐 Security Considerations
