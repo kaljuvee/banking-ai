@@ -1,0 +1,34 @@
+{
+  "processed_documents": [
+    {
+      "document_id": "DOC-001",
+      "filename": "garnishment_order_001.pdf",
+      "document_type": "garnishment_order",
+      "case_id": "CASE-2024-001",
+      "customer_name": "John Michael Doe",
+      "processing_date": "2024-01-15T10:30:00",
+      "confidence_score": 94.2,
+      "status": "Processed",
+      "extracted_data": {
+        "amount": 1250.0,
+        "case_number": "CV-2024-001234",
+        "creditor": "ABC Collections Agency"
+      }
+    },
+    {
+      "document_id": "DOC-002",
+      "filename": "court_notice_002.pdf",
+      "document_type": "court_notice",
+      "case_id": "CASE-2024-002",
+      "customer_name": "Jane Elizabeth Smith",
+      "processing_date": "2024-01-18T14:25:00",
+      "confidence_score": 91.8,
+      "status": "Processed",
+      "extracted_data": {
+        "amount": 850.0,
+        "case_number": "CV-2024-005678",
+        "creditor": "XYZ Legal Services"
+      }
+    }
+  ]
+}
