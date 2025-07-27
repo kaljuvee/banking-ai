@@ -130,9 +130,9 @@ def main():
                 
                 st.markdown(f"""
                 <div class="account-card">
-                    <p><strong>Customer:</strong> {account_data['name']}</p>
-                    <p><strong>Account:</strong> {account_data['account_number']}</p>
-                    <p><strong>Status:</strong> {account_data['status']}</p>
+                    <p><strong>Customer:</strong> {account_data.get('name', 'Unknown')}</p>
+                    <p><strong>Account:</strong> {account_data.get('account_number', 'Unknown')}</p>
+                    <p><strong>Status:</strong> {account_data.get('status', 'Active')}</p>
                 </div>
                 """, unsafe_allow_html=True)
                 
@@ -142,11 +142,11 @@ def main():
                 balance_col1, balance_col2 = st.columns(2)
                 
                 with balance_col1:
-                    st.metric("Current Balance", f"€{account_data['balance']:,.2f}")
-                    st.metric("Available Balance", f"€{account_data['balance'] + account_data['overdraft_limit']:,.2f}")
+                    st.metric("Current Balance", f"€{account_data.get('balance', 0):,.2f}")
+                    st.metric("Available Balance", f"€{account_data.get('balance', 0) + account_data.get('overdraft_limit', 0):,.2f}")
                 
                 with balance_col2:
-                    st.metric("Overdraft Limit", f"€{account_data['overdraft_limit']:,.2f}")
+                    st.metric("Overdraft Limit", f"€{account_data.get('overdraft_limit', 0):,.2f}")
                     st.metric("Overdraft Used", "€0.00")
                 
                 # Account Details
@@ -168,8 +168,8 @@ def main():
                     st.subheader("💳 Payment Capability Check")
                     
                     payment_info = calculate_payment_capability(
-                        account_data['balance'],
-                        account_data['overdraft_limit'],
+                        account_data.get('balance', 0),
+                        account_data.get('overdraft_limit', 0),
                         required_amount
                     )
                     
@@ -219,7 +219,7 @@ def main():
             if account_data:
                 summary_items = [
                     "✅ Account verified",
-                    "✅ Balance sufficient" if account_data['balance'] > 1000 else "⚠️ Low balance",
+                    "✅ Balance sufficient" if account_data.get('balance', 0) > 1000 else "⚠️ Low balance",
                     "⏳ Ready for payment"
                 ]
                 
@@ -357,7 +357,7 @@ def main():
                 'Date': date,
                 'Type': transaction_type,
                 'Amount': f"€{amount:.2f}",
-                'Balance': f"€{account_data['balance'] + random.uniform(-200, 200):.2f}",
+                'Balance': f"€{account_data.get('balance', 0) + random.uniform(-200, 200):.2f}",
                 'Description': f"{transaction_type} transaction"
             })
         
@@ -372,7 +372,7 @@ def main():
         stat_col1, stat_col2, stat_col3, stat_col4 = st.columns(4)
         
         with stat_col1:
-            st.metric("Average Monthly Balance", f"€{account_data['balance'] * 1.1:,.2f}")
+            st.metric("Average Monthly Balance", f"€{account_data.get('balance', 0) * 1.1:,.2f}")
         
         with stat_col2:
             st.metric("Transactions This Month", "23")
@@ -381,7 +381,11 @@ def main():
             st.metric("Overdraft Usage", "0%")
         
         with stat_col4:
-            st.metric("Account Age", f"{(datetime.now() - datetime.strptime(account_data['date_opened'], '%Y-%m-%d')).days // 365} years")
+            try:
+                account_age = (datetime.now() - datetime.strptime(account_data.get('date_opened', '2020-01-01'), '%Y-%m-%d')).days // 365
+                st.metric("Account Age", f"{account_age} years")
+            except:
+                st.metric("Account Age", "Unknown")
 
 if __name__ == "__main__":
     main()
