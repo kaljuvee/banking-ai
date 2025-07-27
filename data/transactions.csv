@@ -1,0 +1,3 @@
+transaction_id,amount,status
+TXN-001,1250.00,Completed
+TXN-002,850.00,Processing

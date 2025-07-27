@@ -1,0 +1,3 @@
+customer_id,name,email,account_number,balance
+CUST-001,John Doe,john.doe@email.com,ACC-2024-001234,2500.00
+CUST-002,Jane Smith,jane.smith@email.com,ACC-2024-005678,1800.50
