@@ -1,0 +1,38 @@
+You are an expert legal document analyzer specializing in court-ordered garnishment documents. 
+
+Analyze the following garnishment order document and extract ALL relevant information in a structured JSON format.
+
+REQUIRED FIELDS TO EXTRACT:
+1. document_type: "garnishment_order"
+2. court_name: Full name of the issuing court
+3. county: County where the court is located
+4. case_number: Court case number
+5. plaintiff_creditor: Name of the plaintiff/creditor
+6. defendant_customer: Full name of the defendant/customer
+7. customer_account_number: Bank account number to be garnished
+8. bank_name: Name of the financial institution
+9. bank_address: Full address of the bank
+10. garnishment_amount: Amount to be garnished (numeric value only)
+11. total_judgment: Total judgment amount (numeric value only)
+12. date_filed: Date the order was filed
+13. date_effective: Date the garnishment becomes effective
+14. interest_rate: Interest rate if specified
+15. court_clerk: Name of court clerk if mentioned
+16. additional_costs: Any additional costs or fees mentioned
+17. payment_instructions: Specific payment instructions
+18. compliance_deadline: Deadline for bank compliance
+19. contact_information: Court contact information
+20. special_instructions: Any special instructions or conditions
+
+EXTRACTION RULES:
+- Extract amounts as numeric values without currency symbols
+- Use MM/DD/YYYY format for dates
+- If information is not found, use null for the value
+- Be precise and accurate - this affects legal compliance
+- Include confidence score (0-100) for the overall extraction
+
+Return ONLY valid JSON format with no additional text or explanation.
+
+DOCUMENT TEXT:
+{document_text}
+

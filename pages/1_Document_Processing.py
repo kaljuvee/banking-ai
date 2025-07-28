@@ -6,6 +6,7 @@ import base64
 from utils.pdf_generator import BankingDocumentGenerator, generate_sample_pdfs
 from utils.ai_processor import process_uploaded_document, verify_customer_against_database, generate_case_summary
 from utils.database import get_database, get_customer_data
+from utils.document_processor import get_document_processor
 
 st.set_page_config(
     page_title="Document Processing",
@@ -161,6 +162,120 @@ def main():
                         {create_download_link(file_path, filename)}
                     </div>
                     """, unsafe_allow_html=True)
+                    
+                    # Add Process button for each document
+                    col_download, col_process = st.columns([1, 1])
+                    
+                    with col_process:
+                        if st.button(f"🔄 Process {filename}", key=f"process_{i}", help="Extract all information from this document"):
+                            with st.spinner(f"Processing {filename}..."):
+                                try:
+                                    # Process the document using enhanced processor
+                                    processor = get_document_processor()
+                                    result = processor.process_sample_document(file_path, filename)
+                                    
+                                    # Store result in session state
+                                    st.session_state[f'processed_sample_{i}'] = result
+                                    st.session_state['last_processed_sample'] = i
+                                    
+                                    st.success(f"✅ {filename} processed successfully!")
+                                    st.rerun()
+                                    
+                                except Exception as e:
+                                    st.error(f"❌ Error processing {filename}: {str(e)}")
+                    
+                    # Display processing results if available
+                    if f'processed_sample_{i}' in st.session_state:
+                        result = st.session_state[f'processed_sample_{i}']
+                        
+                        with st.expander(f"📊 Processing Results - {filename}", expanded=False):
+                            if result.get('status') == 'processed':
+                                # Display summary
+                                processor = get_document_processor()
+                                summary = processor.get_document_summary(result)
+                                st.markdown(summary)
+                                
+                                # Display detailed extraction
+                                st.subheader("📋 Detailed Extraction")
+                                
+                                # Create columns for better display
+                                detail_col1, detail_col2 = st.columns(2)
+                                
+                                with detail_col1:
+                                    st.write("**Document Type:**", result.get('document_type', 'Unknown'))
+                                    st.write("**Case Number:**", result.get('case_number', 'Not found'))
+                                    st.write("**Court:**", result.get('court_name', 'Not found'))
+                                    st.write("**County:**", result.get('county', 'Not found'))
+                                
+                                with detail_col2:
+                                    customer = result.get('defendant_customer') or result.get('account_holder') or result.get('customer_name')
+                                    st.write("**Customer:**", customer or 'Not found')
+                                    
+                                    amount = result.get('garnishment_amount') or result.get('amount_to_withhold') or result.get('freeze_amount')
+                                    if amount:
+                                        st.write("**Amount:**", f"€{amount:,.2f}")
+                                    else:
+                                        st.write("**Amount:**", 'Not specified')
+                                    
+                                    creditor = result.get('plaintiff_creditor') or result.get('creditor_name')
+                                    st.write("**Creditor:**", creditor or 'Not found')
+                                    
+                                    st.write("**Confidence:**", f"{result.get('confidence_score', 0)}%")
+                                
+                                # Show all extracted fields
+                                with st.expander("🔍 All Extracted Fields"):
+                                    # Filter out system fields
+                                    display_fields = {k: v for k, v in result.items() 
+                                                    if k not in ['filename', 'status', 'raw_text', 'processing_timestamp'] and v is not None}
+                                    
+                                    for key, value in display_fields.items():
+                                        st.write(f"**{key.replace('_', ' ').title()}:** {value}")
+                            
+                            elif result.get('status') == 'error':
+                                st.error(f"❌ Processing failed: {result.get('error', 'Unknown error')}")
+                            
+                            else:
+                                st.warning("⚠️ Partial processing - some information may be incomplete")
+                                st.write("**Raw Response:**", result.get('raw_response', 'No response'))
+        
+        # Bulk processing option
+        st.markdown("---")
+        st.subheader("⚡ Bulk Processing")
+        
+        if st.button("🔄 Process All Sample Documents", type="primary"):
+            with st.spinner("Processing all sample documents..."):
+                try:
+                    processor = get_document_processor()
+                    results = processor.process_all_sample_documents()
+                    
+                    # Store results
+                    st.session_state['bulk_processing_results'] = results
+                    
+                    st.success(f"✅ Processed {len(results)} documents successfully!")
+                    
+                    # Display summary
+                    successful = len([r for r in results if r.get('status') == 'processed'])
+                    st.info(f"📊 Processing Summary: {successful}/{len(results)} documents processed successfully")
+                    
+                except Exception as e:
+                    st.error(f"❌ Bulk processing failed: {str(e)}")
+        
+        # Display bulk processing results
+        if 'bulk_processing_results' in st.session_state:
+            with st.expander("📊 Bulk Processing Results", expanded=False):
+                results = st.session_state['bulk_processing_results']
+                
+                for result in results:
+                    filename = result.get('filename', 'Unknown')
+                    status = result.get('status', 'Unknown')
+                    confidence = result.get('confidence_score', 0)
+                    
+                    if status == 'processed':
+                        st.success(f"✅ {filename} - {confidence}% confidence")
+                    elif status == 'error':
+                        st.error(f"❌ {filename} - {result.get('error', 'Unknown error')}")
+                    else:
+                        st.warning(f"⚠️ {filename} - Partial success")
     
     with col2:
         st.header("🎯 Processing Results")
