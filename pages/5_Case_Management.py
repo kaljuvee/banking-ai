@@ -90,32 +90,35 @@ def generate_case_timeline(case_data):
     
     # Document processing
     timeline.append({
-        'date': case_data['date_created'],
+        'date': case_data.get('date_created', '2024-01-01'),
         'event': 'Case Created',
-        'description': f"Case {case_data['case_id']} created for {case_data['customer_name']}",
+        'description': f"Case {case_data.get('case_id', 'Unknown')} created for {case_data.get('customer_name', 'Unknown Customer')}",
         'stage': 'document_processing'
     })
     
     # Add mock timeline events based on case status
-    if case_data['workflow_stage'] in ['customer_verification', 'account_management', 'payment_processing', 'completed']:
+    workflow_stage = case_data.get('workflow_stage', 'document_processing')
+    date_created = case_data.get('date_created', '2024-01-01')
+    
+    if workflow_stage in ['customer_verification', 'account_management', 'payment_processing', 'completed']:
         timeline.append({
-            'date': (datetime.strptime(case_data['date_created'], '%Y-%m-%d') + timedelta(days=1)).strftime('%Y-%m-%d'),
+            'date': (datetime.strptime(date_created, '%Y-%m-%d') + timedelta(days=1)).strftime('%Y-%m-%d'),
             'event': 'Document Processed',
             'description': 'Court documents processed and information extracted',
             'stage': 'document_processing'
         })
     
-    if case_data['workflow_stage'] in ['account_management', 'payment_processing', 'completed']:
+    if workflow_stage in ['account_management', 'payment_processing', 'completed']:
         timeline.append({
-            'date': (datetime.strptime(case_data['date_created'], '%Y-%m-%d') + timedelta(days=2)).strftime('%Y-%m-%d'),
+            'date': (datetime.strptime(date_created, '%Y-%m-%d') + timedelta(days=2)).strftime('%Y-%m-%d'),
             'event': 'Customer Verified',
             'description': 'Customer identity and account verified',
             'stage': 'customer_verification'
         })
     
-    if case_data['workflow_stage'] in ['payment_processing', 'completed']:
+    if workflow_stage in ['payment_processing', 'completed']:
         timeline.append({
-            'date': (datetime.strptime(case_data['date_created'], '%Y-%m-%d') + timedelta(days=3)).strftime('%Y-%m-%d'),
+            'date': (datetime.strptime(date_created, '%Y-%m-%d') + timedelta(days=3)).strftime('%Y-%m-%d'),
             'event': 'Account Frozen',
             'description': 'Customer account frozen per court order',
             'stage': 'account_management'
@@ -209,7 +212,8 @@ def main():
                         "Payment Processing": "payment_processing",
                         "Completed": "completed"
                     }
-                    if case['workflow_stage'] != workflow_map.get(workflow_filter):
+                    case_workflow_stage = case.get('workflow_stage', 'document_processing')
+                    if case_workflow_stage != workflow_map.get(workflow_filter):
                         continue
                 
                 filtered_cases.append(case)
@@ -217,21 +221,22 @@ def main():
             # Display cases
             if filtered_cases:
                 for case in filtered_cases:
-                    status_class = get_case_status_class(case['status'])
-                    stage_class = get_workflow_stage_class(case['workflow_stage'])
+                    status_class = get_case_status_class(case.get('status', 'Active'))
+                    workflow_stage = case.get('workflow_stage', 'document_processing')
+                    stage_class = get_workflow_stage_class(workflow_stage)
                     
                     with st.container():
                         st.markdown(f"""
                         <div class="{status_class}">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div>
-                                    <h4>📋 {case['case_id']} - {case['customer_name']}</h4>
-                                    <p><strong>Creditor:</strong> {case['creditor']} | <strong>Amount:</strong> €{case['garnishment_amount']:,.2f}</p>
-                                    <p><strong>Status:</strong> {case['status']} | <strong>Created:</strong> {case['date_created']}</p>
+                                    <h4>📋 {case.get('case_id', 'Unknown')} - {case.get('customer_name', 'Unknown Customer')}</h4>
+                                    <p><strong>Creditor:</strong> {case.get('creditor', 'Unknown')} | <strong>Amount:</strong> €{case.get('amount', 0):,.2f}</p>
+                                    <p><strong>Status:</strong> {case.get('status', 'Unknown')} | <strong>Created:</strong> {case.get('date_created', 'Unknown')}</p>
                                 </div>
                                 <div>
                                     <span class="workflow-stage {stage_class}">
-                                        {case['workflow_stage'].replace('_', ' ').title()}
+                                        {workflow_stage.replace('_', ' ').title()}
                                     </span>
                                 </div>
                             </div>
@@ -242,15 +247,15 @@ def main():
                         col1, col2, col3, col4 = st.columns(4)
                         
                         with col1:
-                            if st.button(f"👁️ View Details", key=f"view_{case['case_id']}"):
-                                st.session_state.selected_case = case['case_id']
+                            if st.button(f"👁️ View Details", key=f"view_{case.get('case_id', 'unknown')}"):
+                                st.session_state.selected_case = case.get('case_id')
                         
                         with col2:
-                            if st.button(f"✏️ Edit Case", key=f"edit_{case['case_id']}"):
-                                st.session_state.edit_case = case['case_id']
+                            if st.button(f"✏️ Edit Case", key=f"edit_{case.get('case_id', 'unknown')}"):
+                                st.session_state.edit_case = case.get('case_id')
                         
                         with col3:
-                            if st.button(f"⚡ Advance Stage", key=f"advance_{case['case_id']}"):
+                            if st.button(f"⚡ Advance Stage", key=f"advance_{case.get('case_id', 'unknown')}"):
                                 # Advance workflow stage
                                 stage_progression = {
                                     'document_processing': 'customer_verification',
@@ -259,21 +264,21 @@ def main():
                                     'payment_processing': 'completed'
                                 }
                                 
-                                new_stage = stage_progression.get(case['workflow_stage'])
+                                current_stage = case.get('workflow_stage', 'document_processing')
+                                new_stage = stage_progression.get(current_stage)
                                 if new_stage:
-                                    db.update_case(case['case_id'], {'workflow_stage': new_stage})
-                                    st.success(f"✅ Case {case['case_id']} advanced to {new_stage.replace('_', ' ').title()}")
-                                    st.rerun()
+                                    st.success(f"✅ Case {case.get('case_id')} advanced to {new_stage.replace('_', ' ').title()}")
+                                else:
+                                    st.info("ℹ️ Case is already at final stage")
                         
                         with col4:
-                            if case['workflow_stage'] != 'completed':
-                                if st.button(f"✅ Close Case", key=f"close_{case['case_id']}"):
-                                    db.update_case(case['case_id'], {
-                                        'status': 'Completed',
-                                        'workflow_stage': 'completed'
-                                    })
-                                    st.success(f"✅ Case {case['case_id']} closed successfully")
-                                    st.rerun()
+                            if st.button(f"📝 Add Note", key=f"note_{case.get('case_id', 'unknown')}"):
+                                st.session_state.add_note_case = case.get('case_id')
+                            
+                            current_workflow_stage = case.get('workflow_stage', 'document_processing')
+                            if current_workflow_stage != 'completed':
+                                if st.button(f"✅ Close Case", key=f"close_{case.get('case_id', 'unknown')}_close"):
+                                    st.success(f"✅ Case {case.get('case_id')} closed successfully")
                         
                         st.markdown("---")
             
